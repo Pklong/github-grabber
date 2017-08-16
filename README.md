@@ -1,12 +1,13 @@
 # Github-Grabber
 
 This project will provide an introduction to Node through several of its popular modules. 
-We'll use Node's [path], [fs], [process], [http], as well as the third-party [request] to build an application that fetches a user's repos and writes them to a file.
+We'll use Node's [path], [fs], [process], [http], as well as the third-party [request] and [nodemon] to build an application that fetches a user's repos and writes them to a file.
 
 [path]: https://nodejs.org/api/path.html#path_path
 [fs]: https://nodejs.org/api/fs.html#fs_file_system
 [http]: https://nodejs.org/api/http.html#http_http
 [request]: https://github.com/request/request
+[nodemon]: https://nodemon.io/
 [process]: https://nodejs.org/api/process.html#process_process
 
 ### :bug: :no_entry_sign: Debugging
@@ -76,7 +77,7 @@ fs.writeFile('./example.txt', 'I will be written to example.txt', err => {
 
 Run this code and you'll see the new file `example.txt` written in the same directory as our `animal_fun.js` file. If a file already exists as the first argument, it will be overwritten so be careful.
 
-## Passing arguments from the command line
+### Passing arguments from the command line
 
 Eventually we'll be parsing input from HTTP requests, but to start let's explore how to pass information into our script from the command line. Node provides a global [process] object which will allow us to pass arbitrary arguments from our terminal.
 
@@ -92,7 +93,7 @@ Wow, that's a lot of stuff! `process` contains loads of information, so we'll na
 
 Try adding some additional words after `node animal_fun.js` and see how it comes through. For example `node animal_fun.js argv_index_2 argv_index_3 potato`. We'll have access to those additional arguments in our script by bracketing into the process.argv array starting at `process.argv[2]`.
 
-## Putting it all together so far...
+### Putting it all together so far...
 
 Let's put everything we've learned so far to use:
 
@@ -103,10 +104,48 @@ Let's put everything we've learned so far to use:
 
 You can do it!
 
+## Introducing HTTP
+
+We'll now turn our attention to the [http] module. Use the [createServer] method to
+create an instance of [http.Server]. 
+
+### Nodemon 
+
+Before we dive into server-world. We're going to `npm install --save-dev nodemon`.
+
+Nodemon will kill and restart your server whenever you make changes to the file. If we didn't use nodemon, we'd have to manually kill and restart the server to see the effect of our changes, which would be a hassle. Thanks Nodemon!
+
+### package.json scripts
+
+Go into your package.json and add a key under the `scripts` object of `start` pointing to the string "nodemon animal_fun.js" (the file housing our server code). This will allow us to run `npm start` and run our server using nodemon as a developer [dependency].
+
+[dependency]: https://www.linkedin.com/pulse/npm-dependencies-vs-devdependencies-daniel-tonon
+
+### Our first server
 
 
+As an argument, provide a callback that is invoked with request and response objects as arguments. For now, use [response.write] to send a message of "Hello world". With this bare-bones server, we need to invoke [response.end] to signal we're done forming our response.
 
+Finally, we need to provide a port to our server. Use http.Server's [listen] method and provide an unoccupied port of your choice as the first argument and a callback confirming we're listening on a certain port. A simple `console.log` will suffice!
 
+```javascript
+const http = require('http')
 
+const server = http.createServer((req, res) => {
+    res.write('hello world')
+    res.end()
+})
 
+server.listen(8000, () => console.log("I'm listening on port 8000!"))
+
+```
+
+[response.write]: https://nodejs.org/api/http.html#http_response_write_chunk_encoding_callback
+
+[http.Server]: https://nodejs.org/api/http.html#http_class_http_server
+
+[createServer]: https://nodejs.org/api/http.html#http_http_createserver_requestlistener
 [fs.writeFile]: https://nodejs.org/api/fs.html#fs_fs_writefile_file_data_options_callback
+
+[listen]: https://nodejs.org/api/http.html#http_server_listen_port_hostname_backlog_callback
+[response.end]: https://nodejs.org/api/http.html#http_response_end_data_encoding_callback
