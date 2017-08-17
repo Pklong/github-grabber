@@ -106,7 +106,7 @@ You can do it!
 
 ## Introducing HTTP
 
-We'll now turn our attention to the [http] module. Use the [createServer] method to
+We'll now turn our attention to the [http] module, using the [createServer] method to
 create an instance of [http.Server]. 
 
 ### Nodemon 
@@ -124,7 +124,7 @@ Go into your package.json and add a key under the `scripts` object of `start` po
 ### Our first server
 
 
-As an argument, provide a callback that is invoked with request and response objects as arguments. For now, use [response.write] to send a message of "Hello world". With this bare-bones server, we need to invoke [response.end] to signal we're done forming our response.
+As an argument, provide a callback that is invoked with [request] and [response] objects as arguments. For now, use [response.write] to send a message of "Hello world". With this bare-bones server, we need to invoke [response.end] to signal we're done forming our response.
 
 Finally, we need to provide a port to our server. Use http.Server's [listen] method and provide an unoccupied port of your choice as the first argument and a callback confirming we're listening on a certain port. A simple `console.log` will suffice!
 
@@ -139,6 +139,9 @@ const server = http.createServer((req, res) => {
 server.listen(8000, () => console.log("I'm listening on port 8000!"))
 
 ```
+
+[request]: https://nodejs.org/api/http.html#http_class_http_clientrequest
+[response]: https://nodejs.org/api/http.html#http_class_http_serverresponse
 
 ### Putting it all together, part 2
 
