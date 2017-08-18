@@ -1,25 +1,39 @@
 const fs = require('fs')
 const qs = require('qs')
 const http = require('http')
-const request = require('request')
+const https = require('https')
 
-// const options = {
-//   url: 'https://api.github.com/users/pklong',
-//   headers: {
-//     'User-Agent': 'github-grabber'
-//   }
-// }
-// request(options).pipe(fs.createWriteStream('./repos.txt'))
+function buildOptionsObj (username) {
+  return {
+    hostname: `api.github.com`,
+    path: `/users/${username}/starred`,
+    headers: {
+      'User-Agent': 'github-grabber'
+    }
+  }
+}
 
 const githubServer = http.createServer((req, res) => {
   if (req.method === 'POST') {
-    let body = ''
-    req.on('data', d => {
-      body += d
+    let requestBody = ''
+    req.on('data', chunk => {
+      requestBody += chunk
     })
     req.on('end', () => {
-      const username = qs.parse(body).username
-      res.end(username)
+      const username = qs.parse(requestBody).username
+      const ws = fs.createWriteStream(`./${username}_starred_repos.txt`)
+      const opts = buildOptionsObj(username)
+      https.get(opts, (dataStream) => {
+        let repoData = ''
+        dataStream.on('data', chunk => { repoData += chunk })
+        dataStream.on('end', () => {
+          const repos = JSON.parse(repoData).map(repo => {
+            return `Repo: ${repo.name}. Stars: ${repo.stargazers_count}.`
+          }).join('\n')
+          ws.write(repos)
+          res.end(repos)
+        })
+      })
     })
   }
 })

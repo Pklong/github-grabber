@@ -1,12 +1,11 @@
 # Github-Grabber
 
 This project will provide an introduction to Node through several of its popular modules. 
-We'll use Node's [path], [fs], [process], [http], as well as the third-party [request] and [nodemon] to build an application that fetches a user's starred repos and writes them to a file.
+We'll use Node's [fs], [process], and [http], as well as the third-party [nodemon] to build an application that fetches a user's starred repos and writes them to a file.
 
 [path]: https://nodejs.org/api/path.html#path_path
 [fs]: https://nodejs.org/api/fs.html#fs_file_system
 [http]: https://nodejs.org/api/http.html#http_http
-[request]: https://github.com/request/request
 [nodemon]: https://nodemon.io/
 [process]: https://nodejs.org/api/process.html#process_process
 
@@ -164,15 +163,15 @@ Once you have that working, let's refactor a bit. As it stands, we're reading a 
 
 Try storing the file contents in a cache (a POJO will work just fine), and check with each request to see if we have the data already. We can expand this idea to store query results as well...
 
-## Making API calls with Request
+## API calls from our server
 
-We will now introduce the [request] library. Our goal is to write a Node server which will receive a `POST` request of a Github username. Our server will make a request to the Github API with this information and retrieve all the repos this user has starred. Finally, the list of starred repos will be written to a file.
+Our goal is to write a Node server which will receive a `POST` request of a Github username. Our server will make a request to the Github API with this information and retrieve all the repos this user has starred. Finally, the list of starred repos will be written to a file.
 
 Let's start with a clean slate: `touch github_grabber.js`.
 
-Install the library with npm: `npm install --save request`.
+We'll need the [fs], [querystring], [https], and [http] modules as well, require them at the top of the file. Start by creating a simple server using what you've learned so far. We only care about `POST` requests right now, so let's check for that in the request object.
 
-We'll need the [fs], [qs], and [http] modules as well, require them at the top of the file. Start by creating a simple server using what you've learned so far. We only care about `POST` requests right now, so let's check for that in the request object.
+[https]: https://nodejs.org/api/https.html
 
 ```javascript
 const githubServer = http.createServer((req, res) => {
@@ -217,6 +216,28 @@ const githubServer = http.createServer((req, res) => {
 
 Okay! We've written a decent amount of code, so let's test that it works. I used [curl] to post a username to my server, but you could use POSTMAN or other tools... Check to make sure your server is printing out the username you're POSTing.
 
+Once you have successfully parsed the username, it's time to make our call to Github's API. We'll use the [https] module to make our request because Github requires that protocol. `https.get` takes an options object to configure the [request], check it out! 
+
+Github has a friendly REST [API], look up the appropriate URL for your request. The API requires a [user-agent] header be set, make sure that's included in your [request] configuration object.
+
+### Last Steps...
+
+* Make a request to the Github API to retrieve the user's starred repos
+* In the request callback:
+  * Listen for `data` and `end` events and handle appropriately
+  * Select the fields you want to write, I picked 'name' and 'stargazers_count'
+  * Write to a file either using `createWriteStream` or `writeFile`
+  * End the original `http.Response` object with the contents of the file
+
+You did it!
+
+:tada: :tada: :tada:
+
+[request]: https://nodejs.org/api/http.html#http_http_request_options_callback
+
+[user-agent]: https://developer.github.com/v3/#user-agent-required
+
+[API]: https://developer.github.com/v3/#schema
 
 [curl]: https://superuser.com/questions/149329/what-is-the-curl-command-line-syntax-to-do-a-post-request
 
