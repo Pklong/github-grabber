@@ -1,7 +1,7 @@
 # Github-Grabber
 
 This project will provide an introduction to Node through several of its popular modules. 
-We'll use Node's [path], [fs], [process], [http], as well as the third-party [request] and [nodemon] to build an application that fetches a user's repos and writes them to a file.
+We'll use Node's [path], [fs], [process], [http], as well as the third-party [request] and [nodemon] to build an application that fetches a user's starred repos and writes them to a file.
 
 [path]: https://nodejs.org/api/path.html#path_path
 [fs]: https://nodejs.org/api/fs.html#fs_file_system
@@ -164,7 +164,64 @@ Once you have that working, let's refactor a bit. As it stands, we're reading a 
 
 Try storing the file contents in a cache (a POJO will work just fine), and check with each request to see if we have the data already. We can expand this idea to store query results as well...
 
+## Making API calls with Request
 
+We will now introduce the [request] library. Our goal is to write a Node server which will receive a `POST` request of a Github username. Our server will make a request to the Github API with this information and retrieve all the repos this user has starred. Finally, the list of starred repos will be written to a file.
+
+Let's start with a clean slate: `touch github_grabber.js`.
+
+Install the library with npm: `npm install --save request`.
+
+We'll need the [fs], [qs], and [http] modules as well, require them at the top of the file. Start by creating a simple server using what you've learned so far. We only care about `POST` requests right now, so let's check for that in the request object.
+
+```javascript
+const githubServer = http.createServer((req, res) => {
+  if (req.method === 'POST') {
+    res.end("I'm a POST request!")
+  }
+  res.end("Danger, not a POST request!")
+})
+
+githubServer.listen(8080, () => console.log('Listening on 8080'))
+```
+
+Let's take a quick detour and learn more about the [request] object fed into our callback as the first argument. This object is an implementation of the [writable] stream and inherits from the event [emitter] class. 
+
+Streams are a big topic in Node, and I'd encourage you to read more about them, but for our purposes we can think of them as collections of data _eventually_. In other words, we don't have this data all at once and we're not sure when all the data will be available. There are benefits to this, but it means we'll need to listen for certain events to be sure we're getting everything we need. 
+
+Inside our conditional for `POST` requests, declare a variable that will accumulate our data. It should start as an empty string. Add event listeners for `data` and `end` events to our request. In the callback for `data` we should add that data to our variable. In the callback for `end`, we can do whatever we need with confidence that all the data has been retrieved.
+
+### :warning: Protect your server :warning:
+
+Streams are great and powerful, but imagine a malicious user posting MASSIVE amounts of data to your Node server. You'd keep reading in data until your server blew. We're not checking the body length below, but [beware]!
+
+[beware]: https://stackoverflow.com/a/8640308
+
+```javascript
+const githubServer = http.createServer((req, res) => {
+  if (req.method === 'POST') {
+    let body = ''
+    req.on('data', d => {
+      // d is an instance of Buffer, 
+      // toString is implicitly called when we add it to body
+      body += d
+    })
+    req.on('end', () => {
+      // qs.parse will give us a nice object to retrieve the value
+      const username = qs.parse(body).username
+      res.end(username)
+    })
+  }
+})
+```
+
+Okay! We've written a decent amount of code, so let's test that it works. I used [curl] to post a username to my server, but you could use POSTMAN or other tools... Check to make sure your server is printing out the username you're POSTing.
+
+
+[curl]: https://superuser.com/questions/149329/what-is-the-curl-command-line-syntax-to-do-a-post-request
+
+[writable]: https://nodejs.org/api/stream.html#stream_class_stream_writable
+[emitter]: https://nodejs.org/api/events.html#events_class_eventemitter
 
 [querystring]: https://nodejs.org/api/querystring.html
 
